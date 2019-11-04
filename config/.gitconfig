@@ -1,0 +1,8 @@
+[user]
+	email = awsm-bot@ars.usda.gov
+	name = awsm-bot
+[alias]
+	co = checkout
+	br = branch
+	ci = commit
+	st = status

@@ -1,9 +1,3 @@
-# VERSION 1.10.4
-# AUTHOR: Matthieu "Puckel_" Roisil
-# DESCRIPTION: Basic Airflow container
-# BUILD: docker build --rm -t puckel/docker-airflow .
-# SOURCE: https://github.com/puckel/docker-airflow
-
 FROM python:3.7-slim-stretch
 LABEL maintainer="Puckel_"
 
@@ -12,11 +6,14 @@ ENV DEBIAN_FRONTEND noninteractive
 ENV TERM linux
 
 # Airflow
-ARG AIRFLOW_VERSION=1.10.4
+ARG AIRFLOW_VERSION=1.10.6
 ARG AIRFLOW_USER_HOME=/usr/local/airflow
 ARG AIRFLOW_DEPS=""
 ARG PYTHON_DEPS=""
+ARG SHH_PRIVATE_KEY
 ENV AIRFLOW_HOME=${AIRFLOW_USER_HOME}
+# ENV AIRFLOW__CORE__DAG_CONCURRENCY=4
+# ENV AIRFLOW__CORE__PARALLELISM=4
 
 # Define en_US.
 ENV LANGUAGE en_US.UTF-8
@@ -33,7 +30,7 @@ RUN set -ex \
         libssl-dev \
         libffi-dev \
         libpq-dev \
-        git \
+        # git \
     ' \
     && apt-get update -yqq \
     && apt-get upgrade -yqq \
@@ -47,6 +44,20 @@ RUN set -ex \
         rsync \
         netcat \
         locales \
+        libnetcdf11 \
+        libhdf5-serial-dev \
+        netcdf-bin \
+        libnetcdf-dev \
+        python-h5py \
+        libhdf5-dev \
+        hdf5-tools \
+        hdf5-helpers \
+        git \
+        ssh-client \
+        openssh-server \
+        systemd \
+        pkg-config \
+        vim \
     && sed -i 's/^# en_US.UTF-8 UTF-8$/en_US.UTF-8 UTF-8/g' /etc/locale.gen \
     && locale-gen \
     && update-locale LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 \
@@ -56,6 +67,8 @@ RUN set -ex \
     && pip install pyOpenSSL \
     && pip install ndg-httpsclient \
     && pip install pyasn1 \
+    && pip install guds==0.6.0 \
+    && pip install inicheck==0.7.5 \
     && pip install apache-airflow[crypto,celery,postgres,hive,jdbc,mysql,ssh${AIRFLOW_DEPS:+,}${AIRFLOW_DEPS}]==${AIRFLOW_VERSION} \
     && pip install 'redis==3.2' \
     && if [ -n "${PYTHON_DEPS}" ]; then pip install ${PYTHON_DEPS}; fi \
@@ -73,11 +86,15 @@ RUN set -ex \
 COPY script/entrypoint.sh /entrypoint.sh
 COPY config/airflow.cfg ${AIRFLOW_USER_HOME}/airflow.cfg
 
-RUN chown -R airflow: ${AIRFLOW_USER_HOME}
+# Set up ssh for pushing to GitHub
+RUN echo "    IdentityFile /usr/local/airflow/.ssh/id_rsa_awsm_bot" >> /etc/ssh/ssh_config
+RUN echo "PermitRootLogin yes" >> /etc/ssh/sshd_config
+RUN eval "$(ssh-agent -s)"
+RUN groupadd --gid 999 docker \
+    && usermod -aG docker airflow
 
 EXPOSE 8080 5555 8793
 
-USER airflow
 WORKDIR ${AIRFLOW_USER_HOME}
 ENTRYPOINT ["/entrypoint.sh"]
-CMD ["webserver"] # set default arg for entrypoint
+CMD ["webserver"]

@@ -1,4 +1,4 @@
-version: '2.1'
+version: '3'
 services:
     postgres:
         image: postgres:9.6
@@ -8,19 +8,35 @@ services:
             - POSTGRES_DB=airflow
 
     webserver:
-        image: puckel/docker-airflow:1.10.4
+        image: nwrc-airflow
+        user: root
         restart: always
         depends_on:
             - postgres
-        environment:
-            - LOAD_EX=n
-            - EXECUTOR=Local
+        env_file:
+            - nwrc.local.env
         volumes:
+            # airflow
             - ./dags:/usr/local/airflow/dags
-            # Uncomment to include custom plugins
-            # - ./plugins:/usr/local/airflow/plugins
+            - ./logs:/usr/local/airflow/logs
+
+            # data
+            - /data/albedo/:/data/albedo
+            - /data/snowpack/forecasts/hrrr:/data/snowpack/forecasts/hrrr
+            - /home/ops/backups/basin_ops:/data/backups
+            - /home/ops:/home/ops
+
+            # mount docker socket for awsm and katana
+            - /var/run/docker.sock:/var/run/docker.sock:ro
+            - /usr/bin/docker:/bin/docker:ro
+
+            # ssh
+            - /home/ops/.ssh:/root/.ssh
+            - /home/ops/.ssh/.gitconfig:/root/.gitconfig
+
         ports:
-            - "8080:8080"
+            - "32778:8080"
+            - "443:443"
         command: webserver
         healthcheck:
             test: ["CMD-SHELL", "[ -f /usr/local/airflow/airflow-webserver.pid ]"]
