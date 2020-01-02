@@ -7,6 +7,9 @@ services:
             - POSTGRES_PASSWORD=airflow
             - POSTGRES_DB=airflow
 
+        volumes:
+            - /home/ops/docker-airflow_db:/var/lib/postgresql/data
+
     webserver:
         image: nwrc-airflow
         user: root
