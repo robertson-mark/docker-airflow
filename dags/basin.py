@@ -214,7 +214,7 @@ class Basin():
             boolean:        Whether or not the run was succesful
         """
 
-        success = False
+        success = True
         start_date = self.get_start_date(kwargs)
 
         # docker commands here
@@ -238,15 +238,16 @@ class Basin():
         result = check_popen(action, 'AWSM')
         print('From check_popen call: {}'.format(result))
 
+        if 'Traceback' in str(result[1]):
+            success = False
+
+        if not success:
+            raise AirflowException('run_awsm_daily failed')
+
         if self.docker_call_backup:
             with open(self.backup_docker_calls, 'a') as f:
                 f.write('\n')
                 f.write(self.awsm_docker_call)
-
-        success = True
-
-        if not success:
-            raise AirflowException('run_awsm_daily failed')
 
         return success
 
@@ -349,9 +350,12 @@ class Basin():
     def snowav(self, **kwargs):
         '''
         Function to make snowav call to process results.
+
+        Error handling is weak, just parsing terminal output for 'traceback'
+
         '''
 
-        success = False
+        success = True
 
         # get the start date
         start_date = self.get_start_date(kwargs)
@@ -367,12 +371,14 @@ class Basin():
             self.snowav_config, end_date)
 
         print('Running: {}'.format(action))
+        result = check_popen(action, 'SNOWAV')
 
-        check_popen(action, 'SNOWAV')
-
-        success = True
+        if 'Traceback' in str(result[1]):
+            print(str(result[1]))
+            success = False
 
         if not success:
+            print('From check_popen call: {}'.format(result))
             raise AirflowException('snowav failed')
 
     def do_guds(self, **kwargs):
