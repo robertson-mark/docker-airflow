@@ -7,6 +7,7 @@ from subprocess import Popen, PIPE
 import pytz
 import copy
 import shutil
+import netCDF4 as nc
 from airflow import AirflowException
 
 class Basin():
@@ -243,6 +244,29 @@ class Basin():
 
         if not success:
             raise AirflowException('run_awsm_daily failed')
+
+        # Check for empty snow.nc and em.nc files that happen for certain
+        # awsm<=0.10 crashes, in lieu of a fix in awsm
+        start_date = self.get_start_date(kwargs)
+        awsm_path_data = os.path.dirname(self.awsm_path_data)
+        snow_file = os.path.join(awsm_path_data,
+                'runs/run{}/snow.nc'.format(start_date.strftime(self.fmt_dir)))
+
+        if not os.path.isfile(snow_file):
+            raise AirflowException('Output awsm file {} does not '
+                'exist'.format(snow_file))
+
+        ncf = nc.Dataset(snow_file)
+
+        if 'specific_mass' not in ncf.variables:
+            ncf.close()
+            success = False
+            raise AirflowException("No 'specific_mass' variable in {}, awsm "
+                "may have crashed and left empty snow.nc and em.nc "
+                "files. These files must be deleted before awsm can be "
+                "successfully re-run.".format(snow_file))
+
+        ncf.close()
 
         if self.docker_call_backup:
             with open(self.backup_docker_calls, 'a') as f:
