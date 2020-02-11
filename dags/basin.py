@@ -141,7 +141,7 @@ class Basin():
             boolean:        Whether or not the run was succesful
         """
 
-        success = False
+        success = True
 
         # inputs
         buff = 6000
@@ -192,17 +192,25 @@ class Basin():
 
         print('Running: {}'.format(action))
 
+        katana_error_message = "No good grib file"
+
         result = check_popen(action, 'Katana')
+
+        if 'Traceback' in str(result[1]):
+            success = False
+
+            # try to catch no grib file case for user
+            if katana_error_message in str(result[1]):
+                print(' Katana failed to find grib files, check internet '
+                    'and/or weather_forecast_retrieval')
+
+        if not success:
+            raise AirflowException('run_katana_daily failed')
 
         if self.docker_call_backup:
             with open(self.backup_docker_calls, 'w') as f:
                 f.write('Latest docker calls\n')
                 f.write(self.katana_docker_call)
-
-        success = True
-
-        if not success:
-            raise AirflowException('run_katana_daily failed')
 
         return success
 
