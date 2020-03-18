@@ -365,27 +365,24 @@ lakes_report = PythonOperator(
     depends_on_past=False,
     wait_for_downstream=False)
 
+merced_report = PythonOperator(
+    task_id='merced',
+    provide_context=True,
+    python_callable=merced.snowav,
+    dag=dag_report,
+    depends_on_past=False,
+    wait_for_downstream=False)
+
+kaweah_report = PythonOperator(
+    task_id='kaweah',
+    provide_context=True,
+    python_callable=kaweah.snowav,
+    dag=dag_report,
+    depends_on_past=False,
+    wait_for_downstream=False)
 
 tuolumne_report.set_downstream(sanjoaquin_report)
 sanjoaquin_report.set_downstream(lakes_report)
 lakes_report.set_downstream(kings_report)
-
-
-# May want to make a new dag, rather than adding these in, if we do end up
-# reporting on kaweah and/or merced
-
-# merced_report = PythonOperator(
-#     task_id='merced',
-#     provide_context=True,
-#     python_callable=merced.snowav,
-#     dag=dag_report,
-#     depends_on_past=False,
-#     wait_for_downstream=False)
-#
-# kaweah_report = PythonOperator(
-#     task_id='kaweah',
-#     provide_context=True,
-#     python_callable=kaweah.snowav,
-#     dag=dag_report,
-#     depends_on_past=False,
-#     wait_for_downstream=False)
+kings_report.set_downstream(merced_report)
+merced_report.set_downstream(kaweah_report)    
