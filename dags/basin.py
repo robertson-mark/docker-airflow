@@ -43,6 +43,7 @@ class Basin():
         self.zone_number = settings['katana_zone_number']
         self.katana_image = settings['katana_image']
         self.awsm_image = settings['awsm_image']
+        self.snowav_image = settings['snowav_image']
         self.forecast_path = os.path.abspath(settings['forecast_path'])
         self.backup_path = os.path.abspath(settings['backup_path'])
         self.docker_call_backup = settings['docker_call_backup']
@@ -399,7 +400,7 @@ class Basin():
         action += self.snowav_mount_call
         action += self.mount_call
         action += ' --user {}:{}'.format(self.uid, self.gid)
-        action += ' {} snowav -f {} -end_date "{}"'.format(self.awsm_image,
+        action += ' {} snowav -f {} --end_date "{}"'.format(self.snowav_image,
             self.snowav_config, end_date)
 
         print('Running: {}'.format(action))

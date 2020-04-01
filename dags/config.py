@@ -50,6 +50,8 @@ class Config(object):
         atag = ucfg.cfg['settings']['awsm_tag']
         kimage = ucfg.cfg['settings']['katana_image']
         ktag = ucfg.cfg['settings']['katana_tag']
+        simage = ucfg.cfg['settings']['snowav_image']
+        stag = ucfg.cfg['settings']['snowav_tag']
 
         self.settings = {
             "awsm_image": aimage + ':' + atag,
@@ -61,7 +63,8 @@ class Config(object):
             "katana_zone_letter": ucfg.cfg['settings']['katana_zone_letter'],
             "katana_zone_number": ucfg.cfg['settings']['katana_zone_number'],
             "wy": ucfg.cfg['settings']['wy'],
-            "backup_path": ucfg.cfg['settings']['backup_path']
+            "backup_path": ucfg.cfg['settings']['backup_path'],
+            "snowav_image": simage + ':' + stag
             }
 
         # basin sections
