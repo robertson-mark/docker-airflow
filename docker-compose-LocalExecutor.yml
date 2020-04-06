@@ -23,6 +23,8 @@ services:
             # airflow
             - ./dags:/usr/local/airflow/dags
             - ./logs:/usr/local/airflow/logs
+            - ./config/airflow.cfg:/urs/local/airflow/airflow.cfg
+            - ./config/docker-airflow_CoreConfig.ini:/usr/local/config/docker-airflow_CoreConfig.ini
 
             # data
             - /data/albedo/:/data/albedo

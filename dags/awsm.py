@@ -6,15 +6,17 @@ DAG settings and basin-specific settings are read from the config file in
 /home/ops/wy2020/docker-airflow_dag_config.ini
 
 """
-
 from airflow import DAG
-from airflow.operators.bash_operator import BashOperator
 from airflow.operators.python_operator import PythonOperator
+import os
+
 from basin import Basin
 from config import Config
 
-# This gets fields from /home/ops/wy2020/docker-airflow_dag_config.ini
-core_config = "/home/ops/wy2020/docker-airflow_CoreConfig.ini"
+core_config = os.path.abspath(os.path.join(os.getcwd(),
+                                           "..",
+                                           "config/",
+                                           "docker-airflow_CoreConfig.ini"))
 config_file = "/home/ops/wy2020/docker-airflow_dag_config.ini"
 cfg = Config(core_config, config_file)
 args = cfg.args
@@ -32,8 +34,8 @@ t1 = PythonOperator(
     provide_context=True,
     python_callable=tuolumne.run_katana_daily,
     dag=dag,
-    depends_on_past=False,
-    wait_for_downstream=True)
+    depends_on_past=True,
+    wait_for_downstream=False)
 
 t2 = PythonOperator(
     task_id='awsm',
@@ -69,7 +71,6 @@ t2.set_downstream(t3)
 t3.set_downstream(t4)
 t4.set_downstream(t5)
 
-
 ###############################################################################
 #                               San Joaquin
 ###############################################################################
@@ -82,14 +83,15 @@ s1 = PythonOperator(
     provide_context=True,
     python_callable=sanjoaquin.run_katana_daily,
     dag=dag_sanjoaquin,
-    depends_on_past=False,
-    wait_for_downstream=True)
+    depends_on_past=True,
+    wait_for_downstream=False)
 
 s2 = PythonOperator(
     task_id='awsm',
     provide_context=True,
     python_callable=sanjoaquin.full_awsm_day,
     dag=dag_sanjoaquin,
+    retries=0,
     depends_on_past=True,
     wait_for_downstream=True)
 
@@ -133,14 +135,15 @@ k1 = PythonOperator(
     provide_context=True,
     python_callable=kings.run_katana_daily,
     dag=dag_kings,
-    depends_on_past=False,
-    wait_for_downstream=True)
+    depends_on_past=True,
+    wait_for_downstream=False)
 
 k2 = PythonOperator(
     task_id='awsm',
     provide_context=True,
     python_callable=kings.full_awsm_day,
     dag=dag_kings,
+    retries=0,
     depends_on_past=True,
     wait_for_downstream=True)
 
@@ -172,8 +175,6 @@ k2.set_downstream(k3)
 k3.set_downstream(k4)
 k4.set_downstream(k5)
 
-
-
 ###############################################################################
 #                               Lakes
 ###############################################################################
@@ -186,8 +187,8 @@ l1 = PythonOperator(
     provide_context=True,
     python_callable=lakes.run_katana_daily,
     dag=dag_lakes,
-    depends_on_past=False,
-    wait_for_downstream=True)
+    depends_on_past=True,
+    wait_for_downstream=False)
 
 l2 = PythonOperator(
     task_id='awsm',
@@ -237,8 +238,8 @@ m1 = PythonOperator(
     provide_context=True,
     python_callable=merced.run_katana_daily,
     dag=dag_merced,
-    depends_on_past=False,
-    wait_for_downstream=True)
+    depends_on_past=True,
+    wait_for_downstream=False)
 
 m2 = PythonOperator(
     task_id='awsm',
@@ -288,8 +289,8 @@ ka1 = PythonOperator(
     provide_context=True,
     python_callable=kaweah.run_katana_daily,
     dag=dag_kaweah,
-    depends_on_past=False,
-    wait_for_downstream=True)
+    depends_on_past=True,
+    wait_for_downstream=False)
 
 ka2 = PythonOperator(
     task_id='awsm',
@@ -331,7 +332,7 @@ ka4.set_downstream(ka5)
 #                               Reports
 ###############################################################################
 dag_report = DAG('reports', catchup=False, default_args=snowav_args,
-          schedule_interval='0 13 * * *')
+                 schedule_interval='0 13 * * *')
 
 tuolumne_report = PythonOperator(
     task_id='tuolumne',
@@ -385,4 +386,4 @@ tuolumne_report.set_downstream(sanjoaquin_report)
 sanjoaquin_report.set_downstream(lakes_report)
 lakes_report.set_downstream(kings_report)
 kings_report.set_downstream(merced_report)
-merced_report.set_downstream(kaweah_report)    
+merced_report.set_downstream(kaweah_report)

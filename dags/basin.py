@@ -1,18 +1,14 @@
-
-from datetime import datetime, timedelta
-import numpy as np
+from datetime import datetime
 import pandas as pd
 import os
 from subprocess import Popen, PIPE
-import pytz
-import copy
 import shutil
 import netCDF4 as nc
 from airflow import AirflowException
 
+
 class Basin():
-    """
-    Class for storing important basin attributes and methods for running
+    """ Class for storing important basin attributes and methods for running
     AWSM and Katana on a daily basis using docker images. It is IMPORTANT to
     remember that the methods that will be called using PythonOperators should
     only take **kwargs as arguments as Airflow specifies what gets passed in
@@ -25,9 +21,7 @@ class Basin():
     fmt_dir = '%Y%m%d'
 
     def __init__(self, settings, basin_settings):
-
-        """
-        Important: this only modifies the times date dependant folders to
+        """ Important: this only modifies the times date dependant folders to
         account for running AWSM on a daily basis. The paths within the config
         need to be docker paths relative to the mounted docker directries
 
@@ -58,6 +52,10 @@ class Basin():
         self.katana_pixel = basin_settings['katana_pixel']
         self.awsm_path = os.path.abspath(basin_settings['awsm_path'])
         self.awsm_config = os.path.abspath(basin_settings['awsm_config'])
+        if basin_settings['retry_awsm_config'] is not None:
+            self.retry_awsm_config = os.path.abspath(basin_settings['retry_awsm_config'])
+        else:
+            self.retry_awsm_config = None
         self.snowav_config = os.path.abspath(basin_settings['snowav_config'])
         self.topo_file = os.path.abspath(basin_settings['topo_file'])
         self.base_path = os.path.abspath(basin_settings['base_path'])
@@ -75,7 +73,13 @@ class Basin():
         self.docker_snowav_data = '/data/snowav'
         self.docker_path_input = '/data/input'
         self.cfg_name = os.path.basename(self.awsm_config)
+        if self.retry_awsm_config is not None:
+            self.retry_cfg_name = os.path.basename(self.retry_awsm_config)
+            self.retry_docker_cfg = os.path.join(self.config_path_docker, self.retry_cfg_name)
+        else:
+            self.retry_docker_cfg = None
         self.docker_cfg = os.path.join(self.config_path_docker, self.cfg_name)
+        #   self.retry_docker_cfg = os.path.join(self.config_path_docker, self.retry_cfg_name)
         self.credentials_path = '/root/home_ops_token.json'
 
         # develop string for mounting directories into the docker
@@ -224,6 +228,18 @@ class Basin():
             boolean:        Whether or not the run was succesful
         """
 
+        # this is a patch to allow the user to specify different awsm
+        # settings for a retry
+        try_number = kwargs['task_instance'].try_number
+        if (try_number > 2 and self.retry_docker_cfg is not None and 
+            os.path.isfile(self.retry_docker_cfg)):
+            config = self.retry_docker_cfg
+        else:
+            config = self.docker_cfg
+
+        print(' try number: {}'.format(kwargs['task_instance'].try_number))
+        print(' using config: {}'.format(config))
+
         success = True
         start_date = self.get_start_date(kwargs)
 
@@ -235,7 +251,7 @@ class Basin():
         action += ' --user {}:{}'.format(self.uid, self.gid)
         action += ' {} awsm_daily_airflow '.format(self.awsm_image)
         action += ' --cfg {} --start_date {} '
-        action = action.format(self.docker_cfg, start_date.strftime(self.fmt))
+        action = action.format(config, start_date.strftime(self.fmt))
 
         # if we have nowhere to initialize from
         if start_date == pd.to_datetime('{}-10-01'.format(self.wy-1)):
