@@ -23,6 +23,7 @@ services:
             # airflow
             - ./dags:/usr/local/airflow/dags
             - ./logs:/usr/local/airflow/logs
+            - ./config/airflow.cfg:/urs/local/airflow/airflow.cfg
 
             # data
             - /data/albedo/:/data/albedo

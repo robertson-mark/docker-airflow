@@ -1,8 +1,9 @@
 
 from inicheck.tools import get_user_config, check_config, cast_all_variables
-from inicheck.output import generate_config, print_config_report
+from inicheck.output import print_config_report
 from inicheck.config import MasterConfig
 from datetime import timedelta
+
 
 class Config(object):
     """
@@ -31,7 +32,7 @@ class Config(object):
             "email_on_failure": ucfg.cfg['basin_arguments']['email_on_failure'],
             "email_on_retry": ucfg.cfg['basin_arguments']['email_on_retry'],
             "retries": ucfg.cfg['basin_arguments']['retries'],
-            "retry_delay": timedelta(hours=ucfg.cfg['basin_arguments']['retry_delay'])
+            "retry_delay": timedelta(seconds=ucfg.cfg['basin_arguments']['retry_delay'])
         }
 
         self.snowav_args = {
@@ -42,7 +43,7 @@ class Config(object):
             "email_on_failure": ucfg.cfg['snowav_arguments']['email_on_failure'],
             "email_on_retry": ucfg.cfg['snowav_arguments']['email_on_retry'],
             "retries": ucfg.cfg['snowav_arguments']['retries'],
-            "retry_delay": timedelta(hours=ucfg.cfg['snowav_arguments']['retry_delay'])
+            "retry_delay": timedelta(seconds=ucfg.cfg['snowav_arguments']['retry_delay'])
         }
 
         # settings
@@ -73,6 +74,7 @@ class Config(object):
                 "basin": ucfg.cfg[basin]['basin'],
                 "base_path": ucfg.cfg[basin]['base_path'],
                 "awsm_config": ucfg.cfg[basin]['awsm_config'],
+                "retry_awsm_config": ucfg.cfg[basin]['retry_awsm_config'],
                 "snowav_config": ucfg.cfg[basin]['snowav_config'],
                 "katana_pixel": ucfg.cfg[basin]['katana_pixel'],
                 "awsm_path": ucfg.cfg[basin]['awsm_path'],
