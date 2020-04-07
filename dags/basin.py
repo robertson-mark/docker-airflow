@@ -52,10 +52,7 @@ class Basin():
         self.katana_pixel = basin_settings['katana_pixel']
         self.awsm_path = os.path.abspath(basin_settings['awsm_path'])
         self.awsm_config = os.path.abspath(basin_settings['awsm_config'])
-        if basin_settings['retry_awsm_config'] is not None:
-            self.retry_awsm_config = os.path.abspath(basin_settings['retry_awsm_config'])
-        else:
-            self.retry_awsm_config = None
+        self.retry_awsm_config = os.path.abspath(basin_settings['retry_awsm_config'])
         self.snowav_config = os.path.abspath(basin_settings['snowav_config'])
         self.topo_file = os.path.abspath(basin_settings['topo_file'])
         self.base_path = os.path.abspath(basin_settings['base_path'])
@@ -73,13 +70,13 @@ class Basin():
         self.docker_snowav_data = '/data/snowav'
         self.docker_path_input = '/data/input'
         self.cfg_name = os.path.basename(self.awsm_config)
+
         if self.retry_awsm_config is not None:
             self.retry_cfg_name = os.path.basename(self.retry_awsm_config)
             self.retry_docker_cfg = os.path.join(self.config_path_docker, self.retry_cfg_name)
         else:
             self.retry_docker_cfg = None
         self.docker_cfg = os.path.join(self.config_path_docker, self.cfg_name)
-        #   self.retry_docker_cfg = os.path.join(self.config_path_docker, self.retry_cfg_name)
         self.credentials_path = '/root/home_ops_token.json'
 
         # develop string for mounting directories into the docker
