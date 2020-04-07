@@ -52,7 +52,7 @@ class Basin():
         self.katana_pixel = basin_settings['katana_pixel']
         self.awsm_path = os.path.abspath(basin_settings['awsm_path'])
         self.awsm_config = os.path.abspath(basin_settings['awsm_config'])
-        self.retry_awsm_config = os.path.abspath(basin_settings['retry_awsm_config'])
+        self.retry_awsm_config = basin_settings['retry_awsm_config']
         self.snowav_config = os.path.abspath(basin_settings['snowav_config'])
         self.topo_file = os.path.abspath(basin_settings['topo_file'])
         self.base_path = os.path.abspath(basin_settings['base_path'])
@@ -228,11 +228,10 @@ class Basin():
         # this is a patch to allow the user to specify different awsm
         # settings for a retry
         try_number = kwargs['task_instance'].try_number
-        if (try_number > 2 and self.retry_docker_cfg is not None and 
-            os.path.isfile(self.retry_docker_cfg)):
-            config = self.retry_docker_cfg
-        else:
-            config = self.docker_cfg
+        config = self.docker_cfg
+        if try_number > 2 and self.retry_docker_cfg is not None:
+            if os.path.isfile(self.retry_docker_cfg):
+                config = self.retry_docker_cfg
 
         print(' try number: {}'.format(kwargs['task_instance'].try_number))
         print(' using config: {}'.format(config))

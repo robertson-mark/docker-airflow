@@ -14,8 +14,9 @@ from basin import Basin
 from config import Config
 
 
-core_config = os.path.abspath(os.path.join("..",
-                                           "config/"
+core_config = os.path.abspath(os.path.join(os.getcwd(),
+                                           "..",
+                                           "config/",
                                            "docker-airflow_CoreConfig.ini"))
 config_file = "/home/ops/wy2020/docker-airflow_dag_config.ini"
 cfg = Config(core_config, config_file)
