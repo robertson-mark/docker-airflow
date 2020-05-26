@@ -73,6 +73,23 @@ t3.set_downstream(t4)
 t4.set_downstream(t5)
 
 ###############################################################################
+#                               Tuolumne no lidar
+###############################################################################
+tsn = Config(core_config, config_file, 'tuolumne_no_lidar')
+tuolumne_no_lidar = Basin(cfg.settings, tsn.basin_settings)
+dag_tuolumne_no_lidar = DAG('tuolumne_no_lidar', catchup=True, default_args=args, schedule_interval='0 14 * * *')
+
+knu = PythonOperator(
+    task_id='awsm',
+    provide_context=True,
+    python_callable=tuolumne_no_lidar.full_awsm_day,
+    dag=dag_tuolumne_no_lidar,
+    retries=0,
+    depends_on_past=True,
+    wait_for_downstream=True)
+
+
+###############################################################################
 #                               San Joaquin
 ###############################################################################
 ss = Config(core_config, config_file, 'sanjoaquin')
@@ -175,6 +192,23 @@ k1.set_downstream(k2)
 k2.set_downstream(k3)
 k3.set_downstream(k4)
 k4.set_downstream(k5)
+
+###############################################################################
+#                               Kings no lidar
+###############################################################################
+ksn = Config(core_config, config_file, 'kings_no_lidar')
+kings_no_lidar = Basin(cfg.settings, ksn.basin_settings)
+dag_kings_no_lidar = DAG('kings_no_lidar', catchup=True, default_args=args, schedule_interval='0 14 * * *')
+
+knu = PythonOperator(
+    task_id='awsm',
+    provide_context=True,
+    python_callable=kings_no_lidar.full_awsm_day,
+    dag=dag_kings_no_lidar,
+    retries=0,
+    depends_on_past=True,
+    wait_for_downstream=True)
+
 
 ###############################################################################
 #                               Lakes
